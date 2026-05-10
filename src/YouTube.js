@@ -27,9 +27,10 @@ class YouTube {
         } else if (config.ytdl.cookiesFile) {
             baseOptions.cookies = config.ytdl.cookiesFile;
         } else {
-            // Auth yapılandırılmamışsa iOS client kullan.
-            // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
-            baseOptions.extractorArgs = 'youtube:player_client=ios';
+            // Auth yapılandırılmamışsa varsayılan istemcileri kullan.
+            // v1.2.3 - iOS client artık PO Token gerektirdiği için kaldırıldı (Error 403 & Format unavailable).
+            // yt-dlp'nin kendi varsayılan istemci havuzu (web, android, vb.) kullanılacak.
+            // baseOptions.extractorArgs = 'youtube:player_client=ios';
         }
 
         return baseOptions;
@@ -113,6 +114,7 @@ class YouTube {
             const info = await youtubedl(url, this.getYtDlpOptions({
                 dumpSingleJson: true,
                 preferFreeFormats: true,
+                format: 'bestaudio/best',
             }));
 
             if (!info) {

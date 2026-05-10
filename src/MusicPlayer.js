@@ -358,7 +358,7 @@ class MusicPlayer {
                 // Wait up to 10 seconds for the adapter to become available
                 const maxWait = 10000;
                 const startTime = Date.now();
-                
+
                 while (!this.guild.voiceAdapterCreator && (Date.now() - startTime) < maxWait) {
                     await new Promise(resolve => setTimeout(resolve, 500));
                     // Try to fetch the guild again to refresh its state
@@ -375,7 +375,7 @@ class MusicPlayer {
                         }
                     }
                 }
-                
+
                 if (!this.guild.voiceAdapterCreator) {
                     throw new Error('Guild voice adapter not ready after waiting');
                 }
@@ -546,7 +546,7 @@ class MusicPlayer {
         const extension = '.opus';
         const filename = `track_${hash}${extension}`;
         const filepath = path.join(CACHE_DIR, filename);
-        
+
         try {
             // Check if already downloaded (cache hit)
             if (fsSync.existsSync(filepath)) {
@@ -563,7 +563,7 @@ class MusicPlayer {
                 // Wait for the file to be downloaded (max 60 seconds)
                 for (let i = 0; i < 60; i++) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
-                    
+
                     if (fsSync.existsSync(filepath)) {
                         const stats = await fs.stat(filepath);
                         if (stats.size > 0) {
@@ -573,7 +573,7 @@ class MusicPlayer {
                         }
                     }
                 }
-                
+
                 this.downloadingFiles.delete(filepath);
                 throw new Error('Download timeout - file not ready after 60 seconds');
             }
@@ -584,7 +584,7 @@ class MusicPlayer {
             // For Spotify and SoundCloud - we need to use the YouTube URL
             // These platforms have DRM protection and can't be downloaded directly
             let downloadUrl = track.url;
-            
+
             if (track.platform === 'spotify' || track.platform === 'soundcloud') {
                 // For Spotify/SoundCloud, we must use the YouTube equivalent
                 if (track.youtubeUrl) {
@@ -592,10 +592,10 @@ class MusicPlayer {
                 } else {
                     // Search YouTube and use that URL
                     const YouTube = require('./YouTube');
-                    const query = track.platform === 'spotify' 
+                    const query = track.platform === 'spotify'
                         ? `${track.title} ${track.artist}`
                         : track.title;
-                    
+
                     const results = await YouTube.search(query, 1, this.guild?.id);
                     if (results && results.length > 0) {
                         downloadUrl = results[0].url;
@@ -610,10 +610,13 @@ class MusicPlayer {
             // For YouTube, Spotify (via YouTube), SoundCloud (via YouTube) - use youtube-dl-exec
             if (track.platform === 'youtube' || track.platform === 'spotify' || track.platform === 'soundcloud') {
                 const youtubedl = require('youtube-dl-exec');
-                
-                await youtubedl(downloadUrl, {
+                const YouTube = require('./YouTube');
+                const ffmpegPath = require('ffmpeg-static');
+
+                const ytOptions = YouTube.getYtDlpOptions({
                     output: filepath,
-                    format: 'bestaudio',
+                    format: 'bestaudio/best',
+                    ffmpegLocation: ffmpegPath,
                     noCheckCertificates: true,
                     noWarnings: true,
                     preferFreeFormats: true,
@@ -627,6 +630,8 @@ class MusicPlayer {
                     extractAudio: true,
                     audioFormat: 'opus'
                 });
+
+                await youtubedl(downloadUrl, ytOptions);
             } else {
                 // For DirectLink - fetch and transcode with FFmpeg
                 const fetch = await ensureFetch();
@@ -676,7 +681,7 @@ class MusicPlayer {
             // Verify file
             const stats = await fs.stat(filepath);
             if (stats.size === 0) {
-                await fs.unlink(filepath).catch(() => {});
+                await fs.unlink(filepath).catch(() => { });
                 this.downloadingFiles.delete(filepath);
                 throw new Error('Downloaded file is empty');
             }
@@ -849,15 +854,15 @@ class MusicPlayer {
             // Check if we can reuse the current downloaded file (for loop track mode)
             let downloadedFile;
             let shouldDownload = false;
-            
+
             if (this.currentDownloadedFile && fsSync.existsSync(this.currentDownloadedFile)) {
                 // Reuse existing file if it's the same track
-               downloadedFile = this.currentDownloadedFile;
+                downloadedFile = this.currentDownloadedFile;
             } else {
                 // Check if already pre-downloaded
                 const hash = crypto.createHash('md5').update(this.currentTrack.url).digest('hex');
                 const filepath = path.join(CACHE_DIR, `track_${hash}.opus`);
-                
+
                 if (fsSync.existsSync(filepath)) {
                     const stats = fsSync.statSync(filepath);
                     if (stats.size > 0) {
@@ -877,10 +882,10 @@ class MusicPlayer {
                 // Start download in background (don't await)
                 const hash = crypto.createHash('md5').update(this.currentTrack.url).digest('hex');
                 const filepath = path.join(CACHE_DIR, `track_${hash}.opus`);
-                
+
                 // Store track reference for background download (currentTrack might change)
                 const trackToDownload = this.currentTrack;
-                
+
                 // Download in background
                 this.downloadTrack(trackToDownload, streamUrl_final, streamInfo)
                     .then(file => {
@@ -901,18 +906,18 @@ class MusicPlayer {
                     audioStream = streamInfo.stream;
                 } else if (typeof streamUrl_final === 'string') {
                     const fetch = await ensureFetch();
-                    
+
                     try {
                         const response = await fetch(streamUrl_final, {
                             headers: streamInfo?.httpHeaders || {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                             }
                         });
-                        
+
                         if (!response.ok) throw new Error(`Failed to fetch stream: ${response.status}`);
-                        
-                        audioStream = typeof response.body?.getReader === 'function' && typeof Readable.fromWeb === 'function' 
-                            ? Readable.fromWeb(response.body) 
+
+                        audioStream = typeof response.body?.getReader === 'function' && typeof Readable.fromWeb === 'function'
+                            ? Readable.fromWeb(response.body)
                             : response.body;
                     } catch (fetchError) {
                         // Wait for download to complete
@@ -927,7 +932,7 @@ class MusicPlayer {
                                 }
                             }
                         }
-                        
+
                         if (!downloadedFile) throw fetchError;
                     }
                 } else {
@@ -939,10 +944,10 @@ class MusicPlayer {
                     shouldDownload = false; // Fall through to file playback
                 } else if (audioStream) {
                     // Create FFmpeg process for streaming
-                    const seekArgs = resumeFromMs > 0 
-                        ? ['-ss', (resumeFromMs / 1000).toFixed(3)] 
+                    const seekArgs = resumeFromMs > 0
+                        ? ['-ss', (resumeFromMs / 1000).toFixed(3)]
                         : [];
-                    
+
                     const ffmpegProcess = new prism.FFmpeg({
                         command: ffmpegPath,
                         args: [
@@ -975,15 +980,15 @@ class MusicPlayer {
                     });
                 }
             }
-            
+
             // File playback mode (either pre-downloaded or fallback from streaming)
             if (!shouldDownload && downloadedFile) {
                 console.log(`🎵 Playing from cached file: ${path.basename(downloadedFile)} (seek: ${resumeFromMs}ms)`);
-                
-                const seekArgs = resumeFromMs > 0 
-                    ? ['-ss', (resumeFromMs / 1000).toFixed(3)] 
+
+                const seekArgs = resumeFromMs > 0
+                    ? ['-ss', (resumeFromMs / 1000).toFixed(3)]
                     : [];
-                
+
                 const ffmpegProcess = new prism.FFmpeg({
                     command: ffmpegPath,
                     args: [
@@ -1093,11 +1098,11 @@ class MusicPlayer {
             // Calculate remaining time considering the start offset (in seconds)
             const startOffsetSeconds = Math.floor((this.currentTrackStartOffsetMs || 0) / 1000);
             const remainingSeconds = Math.max(1, durationSeconds - startOffsetSeconds);
-            
+
             this.expectedTrackEndTs = Date.now() + (remainingSeconds * 1000);
             // Add 4 seconds buffer, but ensure minimum 5 seconds timeout
             const timeoutMs = Math.max(remainingSeconds * 1000 + 4000, 5000);
-            
+
             console.log(`🕒 Track watchdog: ${remainingSeconds}s remaining (${durationSeconds}s total, ${startOffsetSeconds}s offset)`);
             this.trackTimer = setTimeout(() => this.ensureTrackCompletion(), timeoutMs);
         } else {
@@ -1331,7 +1336,7 @@ class MusicPlayer {
 
         this.stopStateSync();
         if (this.guild?.id) {
-            PlayerStateManager.removeState(this.guild.id).catch(() => {});
+            PlayerStateManager.removeState(this.guild.id).catch(() => { });
         }
 
         // Clear track timer
@@ -1653,11 +1658,11 @@ class MusicPlayer {
             const filteredResults = results.filter(track => {
                 // Skip if duration is missing
                 if (!track.duration) return false;
-                
+
                 // Duration limits: 30 seconds to 10 minutes (600 seconds)
                 // This filters out most tutorials, lessons, podcasts, and full movies
                 if (track.duration < 30 || track.duration > 600) return false;
-                
+
                 // Filter out common non-music keywords in title
                 const title = (track.title || '').toLowerCase();
                 const blockedKeywords = [
@@ -1669,16 +1674,16 @@ class MusicPlayer {
                     'practice', 'exercise', 'workout', 'meditation',
                     'asmr', 'story', 'audiobook', 'mix |', 'compilation'
                 ];
-                
+
                 // Check if title contains any blocked keywords
                 const hasBlockedKeyword = blockedKeywords.some(keyword => title.includes(keyword));
                 if (hasBlockedKeyword) return false;
-                
+
                 // Filter out playlist-like content (mixes and compilations often have many emojis or brackets)
                 const emojiCount = (title.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
                 const bracketCount = (title.match(/[\[\]【】]/g) || []).length;
                 if (emojiCount > 3 || bracketCount > 4) return false;
-                
+
                 return true;
             });
 
@@ -1686,14 +1691,14 @@ class MusicPlayer {
                 // Try again with a different keyword
                 const fallbackKeyword = keywords[Math.floor(Math.random() * keywords.length)];
                 const fallbackResults = await YouTube.search(fallbackKeyword, 10, this.guild.id);
-                const fallbackFiltered = (fallbackResults || []).filter(track => 
+                const fallbackFiltered = (fallbackResults || []).filter(track =>
                     track.duration >= 30 && track.duration <= 600
                 );
-                
+
                 if (fallbackFiltered.length === 0) {
                     return;
                 }
-                
+
                 filteredResults.push(...fallbackFiltered);
             }
 
@@ -1704,7 +1709,7 @@ class MusicPlayer {
 
             // Add to queue
             this.queue.push(randomTrack);
-           
+
             // Preload track
             this.preloadTrack(randomTrack).catch(err => {
                 if (err && err.message) {
@@ -1735,7 +1740,7 @@ class MusicPlayer {
             if (userMessage && this.textChannel) {
                 try {
                     await this.textChannel.send(userMessage);
-                } catch (_) {}
+                } catch (_) { }
             }
             this.currentTrack = this.queue.shift();
             await this.play(null, 0);
@@ -1745,7 +1750,7 @@ class MusicPlayer {
             if (this.textChannel) {
                 try {
                     await this.textChannel.send(msg);
-                } catch (_) {}
+                } catch (_) { }
             }
         }
     }
@@ -1771,7 +1776,7 @@ class MusicPlayer {
         // Check if already downloaded
         const hash = crypto.createHash('md5').update(track.url).digest('hex');
         const filepath = path.join(CACHE_DIR, `track_${hash}.opus`);
-        
+
         if (fsSync.existsSync(filepath)) {
             const stats = fsSync.statSync(filepath);
             if (stats.size > 0) {
@@ -1780,7 +1785,7 @@ class MusicPlayer {
         }
 
         // Check if already preloading/downloading (including downloadingFiles set)
-        if (this.preloadedStreams.has(track.url) || 
+        if (this.preloadedStreams.has(track.url) ||
             this.preloadingQueue.includes(track.url) ||
             this.downloadingFiles.has(filepath)) {
             return;
@@ -1833,7 +1838,7 @@ class MusicPlayer {
                 }
 
                 await this.downloadTrack(track, streamUrl_final, streamInfo);
-                
+
                 // Mark as preloaded
                 this.preloadedStreams.set(track.url, {
                     info: streamInfo,
@@ -2032,9 +2037,9 @@ class MusicPlayer {
             } else {
                 this.currentDownloadedFile = null;
             }
-         } else {
+        } else {
             this.currentDownloadedFile = null;
-         }
+        }
 
         const resumeMsRaw = Number(state.playbackPositionMs) || 0;
         const trackDurationMs = this.currentTrack?.duration ? Number(this.currentTrack.duration) * 1000 : null;
@@ -2144,7 +2149,7 @@ class MusicPlayer {
             if (!this.guild?.id) return;
             if (!this.currentTrack && this.queue.length === 0) return;
 
-            this.persistState('interval').catch(() => {});
+            this.persistState('interval').catch(() => { });
         }, this.stateSyncIntervalMs);
     }
 
@@ -2201,7 +2206,7 @@ class MusicPlayer {
         this.cancelStateSave();
         this.stateSaveTimeout = setTimeout(() => {
             this.stateSaveTimeout = null;
-            this.persistState(reason).catch(() => {});
+            this.persistState(reason).catch(() => { });
         }, Math.max(delay, 0));
     }
 
@@ -2220,9 +2225,9 @@ class MusicPlayer {
 
             // During shutdown, save state before cleanup
             if (isShutdown && this.guild?.id) {
-                this.persistState('shutdown').catch(() => {});
+                this.persistState('shutdown').catch(() => { });
             } else if (this.guild?.id) {
-                PlayerStateManager.removeState(this.guild.id).catch(() => {});
+                PlayerStateManager.removeState(this.guild.id).catch(() => { });
             }
 
             // Clean up all downloaded files (unless shutdown)

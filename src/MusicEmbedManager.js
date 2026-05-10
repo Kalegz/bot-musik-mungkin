@@ -153,6 +153,7 @@ class MusicEmbedManager {
      * Yeni müzik embed'i oluşturur (çalan müzik yokken)
      */
     async createNewMusicEmbed(player, track, member, interaction) {
+        player.requesterId = member.id;
         const embed = await this.createNowPlayingEmbed(player, track, member.guild.id);
         const buttons = await this.createControlButtons(player);
 
@@ -168,7 +169,6 @@ class MusicEmbedManager {
         }
 
         player.nowPlayingMessage = message;
-        player.requesterId = member.id;
 
         return { success: true, message: 'Now playing', isNewEmbed: true };
     }
