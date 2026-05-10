@@ -309,13 +309,43 @@ class YouTube {
         }
     }
 
-    static async getRelatedVideos(videoId, limit = 5) {
+    static async getRelatedVideos(videoId, limit = 5, guildId = null) {
         try {
-            // This would implement getting related videos
-            // For now, return empty array as YouTube API v3 doesn't provide related videos
+            const url = `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`;
+            const info = await youtubedl(url, this.getYtDlpOptions({
+                dumpSingleJson: true,
+                flatPlaylist: true,
+                playlistEnd: limit + 3 // Fetch a bit more to account for duplicates/current video
+            }));
 
-            return [];
+            if (!info || !info.entries) return [];
+
+            const tracks = [];
+            const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'youtube.unknown_title') : 'Unknown Title';
+            const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'youtube.unknown_artist') : 'Unknown Artist';
+
+            for (const item of info.entries) {
+                // Skip if it's the current video itself or has no ID
+                if (!item.id || item.id === videoId) continue;
+
+                const track = {
+                    title: item.title || item.fulltitle || unknownTitle,
+                    artist: item.uploader || item.channel || unknownArtist,
+                    url: `https://www.youtube.com/watch?v=${item.id}`,
+                    duration: item.duration || 0,
+                    thumbnail: item.thumbnails?.[0]?.url || this.createThumbnailUrl(item.id),
+                    platform: 'youtube',
+                    type: 'track',
+                    id: item.id
+                };
+                
+                tracks.push(track);
+                if (tracks.length >= limit) break;
+            }
+
+            return tracks;
         } catch (error) {
+            console.error('Error fetching related videos:', error.message);
             return [];
         }
     }
