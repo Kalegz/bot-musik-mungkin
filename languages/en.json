@@ -267,7 +267,7 @@
     "autoplay_select_desc": "What genre should play when the queue ends?",
     "autoplay_select_genre": "Select a music genre...",
     "autoplay_enabled": "Autoplay Enabled",
-    "autoplay_enabled_desc": "Autoplay enabled for **{genre}** genre. New songs will be added automatically when the queue ends.",
+    "autoplay_enabled_desc": "Autoplay enabled. New songs will be added automatically when the queue ends.",
     "no_lyrics_found": "No lyrics found for this song.",
     "lyrics_unavailable": "Lyrics are unavailable for this song.",
     "lyrics_title": "Song Lyrics",
