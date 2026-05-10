@@ -1662,14 +1662,11 @@ class MusicPlayer {
             this.queue.push(selectedTrack);
             console.log(`🎲 Autoplay: Added to queue - ${selectedTrack.title}`);
 
-            // Preload track
-            this.preloadTrack(selectedTrack).catch(err => {
-                if (err && err.message) {
-                    console.error(`❌ Autoplay preload failed: ${err.message}`);
-                }
-            });
+            // Start playing the newly added track
+            this.currentTrack = this.queue.shift();
+            await this.play(null, 0);
 
-            // Update main embed to show upcoming track
+            // Update main embed to show new track
             if (global.clients && global.clients.musicEmbedManager) {
                 await global.clients.musicEmbedManager.updateNowPlayingEmbed(this).catch(() => {});
             }
