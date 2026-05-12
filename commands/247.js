@@ -23,25 +23,22 @@ module.exports = {
                 return await interaction.editReply({ content: errorMsg });
             }
 
-            // Reset koneksi jika ada yang tersangkut
-            const existingConn = getVoiceConnection(guildId);
-            if (existingConn) {
-                existingConn.destroy();
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-
+            // Ambil atau buat player
             let player = client.players.get(guildId);
             if (!player) {
                 player = new MusicPlayer(interaction.guild, interaction.channel, voiceChannel);
                 client.players.set(guildId, player);
             }
 
-            // Memanggil fungsi connect() 
-            try {
-                await player.connect(voiceChannel);
-            } catch (e) {
-                console.error("Connect Error:", e);
-                return await interaction.editReply({ content: "❌ Gagal bergabung ke channel suara! Pastikan saya punya izin Connect dan Speak." });
+            // Gabung ke channel jika belum ada atau pindah channel
+            const existingConn = getVoiceConnection(guildId);
+            if (!existingConn || existingConn.joinConfig.channelId !== voiceChannel.id) {
+                try {
+                    await player.connect(voiceChannel);
+                } catch (e) {
+                    console.error("Connect Error:", e);
+                    return await interaction.editReply({ content: "❌ Gagal bergabung ke channel suara! Pastikan saya punya izin Connect dan Speak." });
+                }
             }
 
             player.mode247 = !player.mode247;
@@ -68,14 +65,22 @@ module.exports = {
                 .setDescription(description)
                 .setTimestamp();
 
-            await interaction.editReply({ embeds: [embed] });
+            try {
+                await interaction.editReply({ embeds: [embed] });
+            } catch (e) {
+                console.error("Failed to send 247 success reply:", e.message);
+            }
 
         } catch (error) {
             const errorMsg = await ErrorHandler.handle(error, guildId, '247.execute');
-            if (interaction.deferred) {
-                await interaction.editReply({ content: errorMsg });
-            } else {
-                await interaction.reply({ content: errorMsg, ephemeral: true });
+            try {
+                if (interaction.deferred) {
+                    await interaction.editReply({ content: errorMsg });
+                } else {
+                    await interaction.reply({ content: errorMsg, flags: [1 << 6] });
+                }
+            } catch (e) {
+                console.error("Failed to send 247 error reply:", e.message);
             }
         }
     }

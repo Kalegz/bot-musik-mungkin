@@ -24,6 +24,9 @@
       "commands_list": [
         "`/play <lagu/url>` - Putar musik (YouTube, Spotify, SoundCloud)",
         "`/nowplaying` - Informasi tentang lagu saat ini",
+        "`/remove <nomor>` - Hapus lagu tertentu dari antrian",
+        "`/clear` - Kosongkan seluruh antrian",
+        "`/247` - Aktifkan mode 24/7 (bot tidak pernah keluar)",
         "`/help` - Tampilkan menu bantuan ini",
         "`/search <pencarian>` - Cari dan pilih musik di YouTube"
       ],
@@ -146,6 +149,22 @@
       "error_playing": "❌ Terjadi kesalahan saat memutar lagu!",
       "error_searching": "❌ Terjadi kesalahan saat mencari musik!",
       "error_title": "❌ Kesalahan"
+    },
+    "remove": {
+      "title": "🗑️ Hapus Lagu",
+      "no_player": "❌ Tidak ada musik yang sedang diputar!",
+      "no_queue": "❌ Antrian kosong!",
+      "invalid_index": "❌ Nomor lagu tidak valid! Silakan masukkan angka antara 1 sampai {max}.",
+      "removed": "✅ Berhasil menghapus **{title}** dari antrian!",
+      "removed_by": "👤 Dihapus oleh",
+      "error": "❌ Gagal menghapus lagu dari antrian!"
+    },
+    "clear": {
+      "title": "🧹 Bersihkan Antrian",
+      "no_player": "❌ Tidak ada musik yang sedang diputar!",
+      "no_queue": "❌ Antrian sudah kosong!",
+      "cleared": "✅ Berhasil membersihkan **{count}** lagu dari antrian!",
+      "cleared_by": "👤 Dibersihkan oleh"
     }
   },
   "youtube": {
