@@ -73,6 +73,12 @@
       "error_title": "❌ Kesalahan",
       "error_description": "Terjadi kesalahan saat menampilkan menu bantuan!"
     },
+    "247": {
+      "enabled": "Mode 24/7 **Diaktifkan**",
+      "enabled_desc": "Bot sekarang akan berada di channel suara selamanya.",
+      "disabled": "Mode 24/7 **Dinonaktifkan**",
+      "disabled_desc": "Bot sekarang akan keluar otomatis jika channel suara kosong."
+    },
     "search": {
       "no_results": "❌ Tidak ada hasil pencarian yang ditemukan!",
       "title": "🔍 Hasil pencarian untuk \"{query}\"",

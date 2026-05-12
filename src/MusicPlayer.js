@@ -123,6 +123,7 @@ class MusicPlayer {
         // Inactivity timeout
         this.inactivityTimer = null;
         this.inactivityTimeoutMs = 2 * 60 * 1000;
+        this.mode247 = false;
 
         // Local file caching
         this.currentDownloadedFile = null; // Path to currently playing downloaded file
@@ -179,6 +180,9 @@ class MusicPlayer {
 
     setupConnectionEvents() {
         if (!this.connection) return;
+
+        // Prevent memory leaks by removing old listeners before adding new ones
+        this.connection.removeAllListeners();
 
         this.connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
 
@@ -1268,7 +1272,7 @@ class MusicPlayer {
     }
 
     startInactivityTimer() {
-        if (this.inactivityTimer) return;
+        if (this.inactivityTimer || this.mode247) return;
 
         this.pauseFor('alone');
 
@@ -1940,6 +1944,7 @@ class MusicPlayer {
         this.loop = state.loop ?? false;
         this.shuffle = state.shuffle ?? false;
         this.autoplay = state.autoplay ?? false;
+        this.mode247 = state.mode247 ?? false;
         this.requesterId = state.requesterId || this.requesterId;
 
         this.previousTracks = (state.previousTracks || [])

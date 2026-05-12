@@ -73,6 +73,12 @@
       "error_title": "❌ Error",
       "error_description": "An error occurred while displaying the help menu!"
     },
+    "247": {
+      "enabled": "24/7 Mode **Enabled**",
+      "enabled_desc": "The bot will now stay in the voice channel forever.",
+      "disabled": "24/7 Mode **Disabled**",
+      "disabled_desc": "The bot will now automatically leave when the voice channel is empty."
+    },
     "search": {
       "no_results": "❌ No search results found!",
       "title": "🔍 Search results for \"{query}\"",
