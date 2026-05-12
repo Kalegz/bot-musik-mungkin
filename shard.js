@@ -107,6 +107,13 @@ manager.spawn({
     });
     
     console.log(chalk.green('✅ Session restore broadcast complete'));
+
+    // Start Monitoring Server if enabled
+    if (config.monitoring?.enabled) {
+        const MonitorServer = require('./src/MonitorServer');
+        const monitor = new MonitorServer(manager);
+        monitor.start();
+    }
     
 }).catch(error => {
     console.error(chalk.red('❌ Failed to spawn shards:'), error);

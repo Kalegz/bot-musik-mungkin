@@ -1314,6 +1314,12 @@ class MusicPlayer {
             } catch (error) {
                 console.error('❌ Failed to update playback UI after inactivity timeout:', error);
             } finally {
+                // JIKA MODE 24/7 AKTIF, JANGAN CLEANUP/DISCONNECT
+                if (this.mode247) {
+                    console.log(`[SHARD ${this.guild?.shardId ?? 0}] 🕰️ Inactivity timeout triggered, but 24/7 mode is active. Staying in channel.`);
+                    return;
+                }
+
                 try {
                     this.cleanup();
                 } finally {
@@ -1597,6 +1603,13 @@ class MusicPlayer {
 
             setTimeout(() => {
                 if (this.queue.length === 0 && !this.currentTrack) {
+                    // JIKA MODE 24/7 AKTIF, JANGAN CLEANUP/DISCONNECT
+                    if (this.mode247) {
+                        console.log(`[SHARD ${this.guild?.shardId ?? 0}] 🎵 Queue ended, but 24/7 mode is active. Staying in channel.`);
+                        this.persistState('queue-ended-247', true);
+                        return;
+                    }
+
                     this.cleanup();
                     const clientInstance = this.guild?.client;
                     if (clientInstance?.players) {

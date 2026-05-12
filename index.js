@@ -493,6 +493,13 @@ setTimeout(() => {
             // Login to Discord
             await client.login(config.discord.token);
 
+            // Start Monitoring Server if enabled AND not sharded (Shard manager handles it in sharded mode)
+            if (config.monitoring?.enabled && !client.shard) {
+                const MonitorServer = require('./src/MonitorServer');
+                const monitor = new MonitorServer(client);
+                monitor.start();
+            }
+
         } catch (error) {
             console.error(chalk.red('❌ Failed to start bot:'), error);
             process.exit(1);

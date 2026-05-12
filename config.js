@@ -86,6 +86,13 @@ module.exports = {
         
         // Timeout for shard ready event (milliseconds)
         spawnTimeout: parseInt(process.env.SHARD_SPAWN_TIMEOUT) || 30000,
+    },
+
+    // Monitoring Settings
+    monitoring: {
+        enabled: process.env.MONITORING_ENABLED === 'true',
+        port: parseInt(process.env.MONITORING_PORT) || 3000,
+        apiKey: process.env.MONITORING_API_KEY || 'default-secret-key',
     }
 
 };
