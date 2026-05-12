@@ -12,3 +12,7 @@
 
 ## Recent Changes
 - 10 May 2026 12:00: Removed hardcoded `youtube:player_client=ios` fallback from `src/YouTube.js` since iOS client now requires PO tokens and was causing format extraction errors.
+- 11 May 2026 02:40: Fixed authorization race condition in `MusicEmbedManager.js`.
+- 11 May 2026 03:10: Overhauled Autoplay system to use YouTube Mix algorithms and removed Skip permission restrictions.
+- 11 May 2026 03:15: Fixed Autoplay transition logic to correctly trigger playback when queue is empty.
+- 11 May 2026 14:50: Implemented `/247` mode and mitigated `AsyncEventEmitter` memory leak by cleaning up voice connection listeners before registration.
