@@ -358,7 +358,8 @@ class MusicPlayer {
     async connect() {
         try {
             if (!this.voiceChannel) {
-                throw new Error('Voice channel is not defined');
+                console.warn(`[SHARD ${this.guild?.shardId ?? 0}] ⚠️ Connect attempt but voiceChannel is not defined for guild ${this.guild.name}. Skipping connect.`);
+                return false;
             }
 
             // Wait for guild's WebSocket to be ready (critical for sharding)
@@ -404,8 +405,8 @@ class MusicPlayer {
             await entersState(this.connection, VoiceConnectionStatus.Ready, 40000);
             return true;
         } catch (error) {
-            console.error('❌ Failed to connect to voice channel:', error.message || error);
-            throw error; // Re-throw so restoreFromState can handle it
+            console.error(`[SHARD ${this.guild?.shardId ?? 0}] ❌ Failed to connect to voice channel in guild ${this.guild.name}:`, error.message || error);
+            return false;
         }
     }
 

@@ -313,10 +313,14 @@ setTimeout(() => {
 
             if (newChannelId && oldChannelId !== newChannelId) {
                 if (newState.channel) {
-                    await player.moveToChannel(newState.channel);
-                    player.clearInactivityTimer(false);
-                    if (client.musicEmbedManager) {
-                        await client.musicEmbedManager.updateNowPlayingEmbed(player);
+                    try {
+                        await player.moveToChannel(newState.channel);
+                        player.clearInactivityTimer(false);
+                        if (client.musicEmbedManager) {
+                            await client.musicEmbedManager.updateNowPlayingEmbed(player);
+                        }
+                    } catch (err) {
+                        console.error(`❌ Failed to move to channel in guild ${guild.name}:`, err.message);
                     }
                 }
             }
