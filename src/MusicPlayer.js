@@ -1334,40 +1334,27 @@ class MusicPlayer {
     }
 
     stop() {
-        this.clearInactivityTimer(false);
-        this.pauseReasons.clear();
-        this.paused = false;
-
-        this.stopStateSync();
-        if (this.guild?.id) {
-            PlayerStateManager.removeState(this.guild.id).catch(() => { });
-        }
-
-        // Clear track timer
-        if (this.trackTimer) {
-            clearTimeout(this.trackTimer);
-            this.trackTimer = null;
-        }
-
-        // Clean up current downloaded file
-        if (this.currentDownloadedFile) {
-            this.deleteDownloadedFile(this.currentDownloadedFile);
-            this.currentDownloadedFile = null;
-        }
-
-        // Clean up all downloaded files
-        for (const filepath of this.downloadedFiles) {
-            this.deleteDownloadedFile(filepath);
-        }
-        this.downloadedFiles.clear();
-
         this.queue = [];
         this.currentTrack = null;
         this.pendingEndReason = 'stop';
         this.stopRequested = true;
         this.currentTrackStartOffsetMs = 0;
         this.lastPlaybackPosition = 0;
-        this.audioPlayer.stop(true);
+        
+        if (this.audioPlayer) {
+            this.audioPlayer.stop(true);
+        }
+
+        // JIKA MODE 24/7 AKTIF, JANGAN DISCONNECT
+        if (this.mode247) {
+            this.persistState('stop-247', true);
+            if (global.clients?.musicEmbedManager) {
+                global.clients.musicEmbedManager.updateNowPlayingEmbed(this).catch(() => {});
+            }
+            return;
+        }
+
+        // JIKA TIDAK 24/7, BARU DISCONNECT
         this.disconnect();
     }
 
