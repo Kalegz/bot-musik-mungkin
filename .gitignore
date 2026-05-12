@@ -1,25 +1,9 @@
-# Dependency
 node_modules/
-
-# Environment variables
 .env
-
-# Cache & Logs
 audio_cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Test files
-test_audio.opus
-test_audio2.opus
-test_info.json
-test_mix.js
-test_related.js
-test.js
-test2.js
-test3.js
-
-# OS files
 .DS_Store
 Thumbs.db
+cookies.txt
