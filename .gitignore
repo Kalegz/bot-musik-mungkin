@@ -7,3 +7,9 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 cookies.txt
+database/
+*.opus
+*.json
+!package.json
+!package-lock.json
+!languages/*.json
