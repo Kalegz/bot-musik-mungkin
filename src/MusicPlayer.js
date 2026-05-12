@@ -357,6 +357,10 @@ class MusicPlayer {
 
     async connect() {
         try {
+            if (!this.voiceChannel) {
+                throw new Error('Voice channel is not defined');
+            }
+
             // Wait for guild's WebSocket to be ready (critical for sharding)
             if (!this.guild.voiceAdapterCreator) {
                 // Wait up to 10 seconds for the adapter to become available
@@ -397,10 +401,10 @@ class MusicPlayer {
             this.connection.subscribe(this.audioPlayer);
 
             // Wait for connection to be ready
-            await entersState(this.connection, VoiceConnectionStatus.Ready, 30000);
+            await entersState(this.connection, VoiceConnectionStatus.Ready, 40000);
             return true;
         } catch (error) {
-            console.error('❌ Failed to connect to voice channel:', error.message);
+            console.error('❌ Failed to connect to voice channel:', error.message || error);
             throw error; // Re-throw so restoreFromState can handle it
         }
     }
@@ -418,14 +422,16 @@ class MusicPlayer {
                     selfMute: false
                 });
 
-                await entersState(this.connection, VoiceConnectionStatus.Ready, 15000);
+                await entersState(this.connection, VoiceConnectionStatus.Ready, 40000);
                 return true;
             } catch (error) {
-                console.error('❌ Failed to rejoin new voice channel:', error);
-                try {
-                    this.connection.destroy();
-                } catch (destroyError) {
-                    console.error('❌ Error destroying old connection:', destroyError);
+                console.error('❌ Failed to rejoin new voice channel:', error.message || error);
+                if (this.connection) {
+                    try {
+                        this.connection.destroy();
+                    } catch (destroyError) {
+                        console.error('❌ Error destroying old connection:', destroyError);
+                    }
                 }
                 this.connection = null;
             }
